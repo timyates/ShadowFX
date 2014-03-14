@@ -1,0 +1,14 @@
+apply plugin: 'java'
+apply from: 'javafx.plugin'
+
+repositories {
+    mavenCentral()
+}
+
+dependencies {
+    compile "com.airhacks:afterburner.fx:$afterburnerVersion"
+}
+
+javafx {
+    mainClass = 'com.bloidonia.shadowtest.App'
+}

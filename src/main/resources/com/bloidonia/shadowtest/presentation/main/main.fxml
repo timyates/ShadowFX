@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.scene.layout.*?>
+
+<AnchorPane fx:id="mainPane"
+            id="AnchorPane"
+            prefHeight="360.0"
+            prefWidth="640.0"
+            styleClass="main"
+            xmlns:fx="http://javafx.com/fxml"
+            fx:controller="com.bloidonia.shadowtest.presentation.main.MainPresenter">
+    <children>
+    </children>
+</AnchorPane>
