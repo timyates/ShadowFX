@@ -2,13 +2,25 @@
 
 <?import javafx.scene.layout.*?>
 
-<AnchorPane fx:id="mainPane"
-            id="AnchorPane"
+<StackPane fx:id="mainPane"
+            id="mainPane"
             prefHeight="360.0"
             prefWidth="640.0"
             styleClass="main"
             xmlns:fx="http://javafx.com/fxml"
             fx:controller="com.bloidonia.shadowtest.presentation.main.MainPresenter">
     <children>
+        <AnchorPane fx:id="walls">
+            <children>
+            </children>
+        </AnchorPane>
+        <AnchorPane fx:id="shadow">
+            <children>
+            </children>
+        </AnchorPane>
+        <AnchorPane fx:id="light">
+            <children>
+            </children>
+        </AnchorPane>
     </children>
-</AnchorPane>
+</StackPane>

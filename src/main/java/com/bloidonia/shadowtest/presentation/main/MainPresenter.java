@@ -8,9 +8,11 @@ import javafx.beans.property.DoubleProperty;
 import javafx.beans.property.SimpleDoubleProperty;
 import javafx.fxml.FXML;
 import javafx.fxml.Initializable;
+import javafx.scene.effect.BlendMode;
 import javafx.scene.effect.BoxBlur;
 import javafx.scene.input.MouseEvent;
 import javafx.scene.layout.AnchorPane;
+import javafx.scene.layout.StackPane;
 import javafx.scene.paint.Color;
 import javafx.scene.paint.CycleMethod;
 import javafx.scene.paint.RadialGradient;
@@ -20,11 +22,21 @@ import javafx.scene.shape.*;
 import java.net.URL;
 import java.util.*;
 import java.util.stream.Collectors;
+import java.util.stream.IntStream;
 import java.util.stream.Stream;
 
 public class MainPresenter implements Initializable {
     @FXML
-    AnchorPane mainPane;
+    StackPane mainPane;
+
+    @FXML
+    AnchorPane walls ;
+
+    @FXML
+    AnchorPane shadow ;
+
+    @FXML
+    AnchorPane light ;
 
     DoubleProperty mouseX = new SimpleDoubleProperty();
     DoubleProperty mouseY = new SimpleDoubleProperty();
@@ -47,7 +59,7 @@ public class MainPresenter implements Initializable {
 
     @Override
     public void initialize( URL url, ResourceBundle resourceBundle ) {
-        mainPane.getChildren().addAll(
+        walls.getChildren().addAll(
                 Arrays.asList( segments ).stream().skip( 1 ).map( ( p ) -> {
                     Polygon shape = new Polygon();
                     for( Point pt : p ) {
@@ -57,6 +69,10 @@ public class MainPresenter implements Initializable {
                     return shape;
                 } ).collect( Collectors.toList() )
         );
+        shadow.getChildren().add( new Rectangle( 0, 0, 640, 360 ) {{
+            setFill( Color.valueOf( "#000000AA" ) );
+            setBlendMode( BlendMode.DARKEN );
+        }} ) ;
         points = Arrays.asList( segments ).stream()
                 .flatMap( ( pts ) -> Arrays.asList( pts ).stream() )
                 .collect( Collectors.toSet() );
@@ -82,19 +98,14 @@ public class MainPresenter implements Initializable {
         }.start();
     }
 
-    private void renderRays() {
-        mainPane.getChildren().removeAll( rays );
-        rays.clear();
-        double mx = mouseX.get();
-        double my = mouseY.get();
-        Point mp = new Point( mx, my );
-        Polygon light = new Polygon();
+    private Polygon renderRay( Point mp ) {
+        Polygon lightPoly = new Polygon();
         List<Point> beams = points.stream()
-                .map( p -> Math.atan2( p.getY() - my, p.getX() - mx ) )
+                .map( p -> Math.atan2( p.getY() - mp.getY(), p.getX() - mp.getX() ) )
                 .flatMap( a -> Stream.of( a - 0.0001, a, a + 0.0001 ) )
                 .sorted()
                 .map( a -> {
-                    Segment s = new Segment( mp, new Point( mx + Math.cos( a ), my + Math.sin( a ) ) );
+                    Segment s = new Segment( mp, new Point( mp.getX() + Math.cos( a ), mp.getY() + Math.sin( a ) ) );
                     Intersection i = segmentSet.stream()
                             .map( ss -> Intersection.intersect( s, ss ) )
                             .min( ( o1, o2 ) -> Double.compare( o1.getDistance(), o2.getDistance() ) ).get();
@@ -106,24 +117,29 @@ public class MainPresenter implements Initializable {
                 .filter( i -> i != Intersection.NONE )
                 .map( Intersection::getPoint )
                 .collect( Collectors.toList() );
-        light.getPoints()
+        lightPoly.getPoints()
                 .addAll( beams.stream()
                         .flatMap( p -> Stream.of( p.getX(), p.getY() ) )
                         .collect( Collectors.toList() ) );
-        Shape shadow = Shape.subtract( new Rectangle( 0, 0, 640, 360 ), light );
-        shadow.setFill( Color.valueOf( "#333333EE" ) );
-        rays.add( shadow );
-        light.setFill( new RadialGradient( 0,
-                .1,
-                mx,
-                my,
-                400,
-                false,
-                CycleMethod.NO_CYCLE,
-                new Stop( 0, Color.WHITE ),
-                new Stop( 1, Color.valueOf( "#33333399" ) ) ) );
-        rays.add( light );
-        mainPane.getChildren().addAll( rays );
+        lightPoly.setFill( new RadialGradient( 0, .5, mp.getX(), mp.getY(),
+                400, false, CycleMethod.NO_CYCLE, new Stop( 0, Color.valueOf( "#FFFFFF55" ) ),
+                new Stop( 1, Color.valueOf( "#33333300" ) ) ) );
+        lightPoly.setBlendMode( BlendMode.SOFT_LIGHT );
+        return lightPoly ;
+    }
+    
+    private void renderRays() {
+        light.getChildren().removeAll( rays );
+        rays.clear();
+        double mx = mouseX.get();
+        double my = mouseY.get();
+
+        for( int i = 0 ; i < 8 ; i++ ) {
+            rays.add( renderRay( new Point( mx + Math.cos( ( i / 8.0 ) * ( Math.PI * 2.0 ) ) * 7.0,
+                                            my + Math.sin( ( i / 8.0 ) * ( Math.PI * 2.0 ) ) * 7.0  ) ) ) ;
+        }
+
+        light.getChildren().addAll( rays );
         debug = false;
     }
 
