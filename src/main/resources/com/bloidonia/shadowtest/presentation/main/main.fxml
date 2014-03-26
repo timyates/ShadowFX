@@ -22,5 +22,9 @@
             <children>
             </children>
         </AnchorPane>
+        <AnchorPane fx:id="sprites">
+            <children>
+            </children>
+        </AnchorPane>
     </children>
 </StackPane>

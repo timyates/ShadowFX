@@ -10,6 +10,8 @@ import javafx.fxml.FXML;
 import javafx.fxml.Initializable;
 import javafx.scene.effect.BlendMode;
 import javafx.scene.effect.BoxBlur;
+import javafx.scene.image.Image;
+import javafx.scene.image.ImageView;
 import javafx.scene.input.MouseEvent;
 import javafx.scene.layout.AnchorPane;
 import javafx.scene.layout.StackPane;
@@ -33,6 +35,9 @@ public class MainPresenter implements Initializable {
     AnchorPane walls ;
 
     @FXML
+    AnchorPane sprites ;
+
+    @FXML
     AnchorPane shadow ;
 
     @FXML
@@ -54,8 +59,11 @@ public class MainPresenter implements Initializable {
     };
 
     Set<Point> points;
+    Set<Point> spritePoints;
     Set<Segment> segmentSet;
+    Set<Segment> spriteSegments;
     private boolean debug = false;
+    ImageView chest ;
 
     @Override
     public void initialize( URL url, ResourceBundle resourceBundle ) {
@@ -69,13 +77,16 @@ public class MainPresenter implements Initializable {
                     return shape;
                 } ).collect( Collectors.toList() )
         );
+
         shadow.getChildren().add( new Rectangle( 0, 0, 640, 360 ) {{
-            setFill( Color.valueOf( "#000000AA" ) );
+            setFill( Color.valueOf( "#000000BB" ) );
             setBlendMode( BlendMode.DARKEN );
         }} ) ;
+
         points = Arrays.asList( segments ).stream()
                 .flatMap( ( pts ) -> Arrays.asList( pts ).stream() )
                 .collect( Collectors.toSet() );
+
         segmentSet = new HashSet<>();
         for( Point[] sh : segments ) {
             for( int i = 0; i < sh.length - 1; i++ ) {
@@ -83,13 +94,28 @@ public class MainPresenter implements Initializable {
             }
             segmentSet.add( new Segment( sh[ sh.length - 1 ], sh[ 0 ] ) );
         }
+
+        chest = new ImageView( new Image( "/com/bloidonia/shadowtest/presentation/main/chest.gif" ) ) ;
+        chest.setX( 320 ) ;
+        chest.setY( 180 ) ;
+        sprites.getChildren().add( chest ) ;
+        spritePoints = new HashSet<>();
+        spriteSegments = new HashSet<>();
+        spritePoints.add( new Point( 320, 188 ) ) ;
+        spritePoints.add( new Point( 352, 188 ) ) ;
+        spritePoints.add( new Point( 352, 212 ) ) ;
+        spritePoints.add( new Point( 320, 212 ) ) ;
+        spriteSegments.add( new Segment( new Point( 320, 188 ), new Point( 352, 188 ) ) ) ;
+        spriteSegments.add( new Segment( new Point( 352, 188 ), new Point( 352, 212 ) ) ) ;
+        spriteSegments.add( new Segment( new Point( 352, 212 ), new Point( 320, 212 ) ) ) ;
+        spriteSegments.add( new Segment( new Point( 320, 212 ), new Point( 320, 188 ) ) ) ;
+
         mainPane.setOnMouseMoved( ( MouseEvent mouseEvent ) -> {
             mouseX.set( mouseEvent.getSceneX() );
             mouseY.set( mouseEvent.getSceneY() );
         } );
-        mainPane.setOnMouseClicked( ( MouseEvent mouseEvent ) -> {
-            debug = true;
-        } );
+        mainPane.setOnMouseClicked( ( MouseEvent mouseEvent ) -> { debug = true; } );
+
         new AnimationTimer() {
             @Override
             public void handle( long l ) {
@@ -98,7 +124,7 @@ public class MainPresenter implements Initializable {
         }.start();
     }
 
-    private Polygon renderRay( Point mp ) {
+    private Polygon renderRay( Point mp, Set<Point> points, Set<Segment> segmentSet ) {
         Polygon lightPoly = new Polygon();
         List<Point> beams = points.stream()
                 .map( p -> Math.atan2( p.getY() - mp.getY(), p.getX() - mp.getX() ) )
@@ -135,11 +161,27 @@ public class MainPresenter implements Initializable {
         double my = mouseY.get();
 
         for( int i = 0 ; i < 8 ; i++ ) {
-            rays.add( renderRay( new Point( mx + Math.cos( ( i / 8.0 ) * ( Math.PI * 2.0 ) ) * 7.0,
-                                            my + Math.sin( ( i / 8.0 ) * ( Math.PI * 2.0 ) ) * 7.0  ) ) ) ;
+            Polygon beam = renderRay( new Point( mx + Math.cos( ( i / 8.0 ) * ( Math.PI * 2.0 ) ) * 7.0,
+                                                 my + Math.sin( ( i / 8.0 ) * ( Math.PI * 2.0 ) ) * 7.0  ), points, segmentSet ) ;
+            rays.add( beam ) ;
+        }
+
+        chest.setClip( rays.stream().reduce( new Rectangle( 0, 0, 0, 0 ), (r,n) -> Shape.union( r, n ) ) );
+
+        rays.clear();
+
+        Set<Point> combinedPoints = new HashSet<>( points ) ;
+        combinedPoints.addAll( spritePoints ) ;
+        Set<Segment> combinedSegments = new HashSet<>( segmentSet ) ;
+        combinedSegments.addAll( spriteSegments ) ;
+        for( int i = 0 ; i < 8 ; i++ ) {
+            Polygon beam = renderRay( new Point( mx + Math.cos( ( i / 8.0 ) * ( Math.PI * 2.0 ) ) * 7.0,
+                    my + Math.sin( ( i / 8.0 ) * ( Math.PI * 2.0 ) ) * 7.0  ), combinedPoints, combinedSegments ) ;
+            rays.add( beam ) ;
         }
 
         light.getChildren().addAll( rays );
+
         debug = false;
     }
 
