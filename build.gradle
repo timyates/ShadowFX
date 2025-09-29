@@ -1,15 +1,16 @@
-apply plugin: 'idea'
-apply plugin: 'java'
-apply from: 'javafx.plugin'
+plugins {
+    id 'application'
+    id 'com.gluonhq.gluonfx-gradle-plugin' version '1.0.27'
+}
 
 repositories {
     mavenCentral()
 }
 
-dependencies {
-    compile "com.airhacks:afterburner.fx:$afterburnerVersion"
+application {
+    mainClass.set('com.bloidonia.shadowtest.App')
 }
 
-javafx {
-    mainClass = 'com.bloidonia.shadowtest.App'
+gluonfx {
+    javafxStaticSdkVersion = '25'
 }

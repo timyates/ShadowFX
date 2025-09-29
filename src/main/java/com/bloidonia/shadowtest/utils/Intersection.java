@@ -15,22 +15,22 @@ public class Intersection {
         double r_mag = ray.magnitude();
         double s_mag = segment.magnitude();
 
-        if( ray.getTo().getX() / r_mag == segment.getTo().getX() / s_mag &&
-                ray.getTo().getY() / r_mag == segment.getTo().getY() / s_mag ) { // Directions are the same.
+        if( ray.to().x() / r_mag == segment.to().x() / s_mag &&
+                ray.to().y() / r_mag == segment.to().y() / s_mag ) { // Directions are the same.
             return NONE;
         }
 
-        double T2 = ( ray.getTo().getX() *
-                ( segment.getFrom().getY() - ray.getFrom().getY() ) +
-                ray.getTo().getY() *
-                        ( ray.getFrom().getX() - segment.getFrom().getX() ) ) /
-                ( segment.getTo().getX() * ray.getTo().getY() - segment.getTo().getY() * ray.getTo().getX() );
-        double T1 = ( segment.getFrom().getX() + segment.getTo().getX() * T2 - ray.getFrom().getX() ) / ray.getTo().getX();
+        double T2 = ( ray.to().x() *
+                ( segment.from().y() - ray.from().y() ) +
+                ray.to().y() *
+                        ( ray.from().x() - segment.from().x() ) ) /
+                ( segment.to().x() * ray.to().y() - segment.to().y() * ray.to().x() );
+        double T1 = ( segment.from().x() + segment.to().x() * T2 - ray.from().x() ) / ray.to().x();
 
         if( T1 < 0 || ( T2 < 0 || T2 > 1 ) ) return NONE;
 
-        return new Intersection( new Point( ray.getFrom().getX() + ray.getTo().getX() * T1,
-                ray.getFrom().getY() + ray.getTo().getY() * T1 ),
+        return new Intersection( new Point( ray.from().x() + ray.to().x() * T1,
+                ray.from().y() + ray.to().y() * T1 ),
                 T1
         );
     }

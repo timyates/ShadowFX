@@ -1,23 +1,12 @@
 package com.bloidonia.shadowtest.utils;
 
-public class Segment {
-    private Point from;
-    private Point to;
+public record Segment(Point from, Point to) {
 
-    public Segment( Point a, Point b ) {
-        this.from = a;
-        this.to = new Point( b.getX() - a.getX(), b.getY() - a.getY() );
+    public static Segment build(Point a, Point b) {
+        return new Segment(a, new Point(b.x() - a.x(), b.y() - a.y()));
     }
 
     public double magnitude() {
-        return Math.sqrt( to.getX() * to.getX() + to.getY() * to.getY() );
-    }
-
-    public Point getFrom() {
-        return from;
-    }
-
-    public Point getTo() {
-        return to;
+        return Math.sqrt(to.x() * to.x() + to.y() * to.y());
     }
 }
